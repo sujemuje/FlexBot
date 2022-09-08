@@ -1,9 +1,32 @@
+import random
+from typing import *
 import discord
+import json
 import os
 
 
 client = discord.Client(intents=discord.Intents.all())
 tree = discord.app_commands.CommandTree(client=client)
+
+
+@tree.command(
+    name='embed',
+    description='embed'
+)
+async def __command_print(interaction: discord.Interaction, attachment: discord.Attachment):
+    embed = discord.Embed.from_dict(
+        json.loads((await attachment.to_file()).fp.read().decode('utf-8'))
+    )
+    await interaction.response.send_message(embed=embed)
+
+
+@tree.command(
+    name='message',
+    description='message'
+)
+async def __command_embed(interaction: discord.Interaction, attachment: discord.Attachment):
+    content = (await attachment.to_file()).fp.read().decode('utf-8')
+    await interaction.response.send_message(content=content)
 
 
 class JoinButton(discord.ui.Button):
@@ -118,9 +141,29 @@ async def __command_rps(
     await interaction.response.send_message(content=f'**ROCK-PAPER-SCISSORS**\n{interaction.user.mention}', view=view)
 
 
+Coin = Literal['heads', 'tails']
+
+
+@tree.command(
+    name='coinflip',
+    description='Flip a coin!'
+)
+async def __command_coinflip(
+        interaction: discord.Interaction,
+        bet: Coin
+) -> None:
+    coin = random.choice(['heads', 'tails'])
+    content = f"It's a {coin}! You "
+    if coin == bet:
+        content += 'won!'
+    else:
+        content += 'lost!'
+    await interaction.response.send_message(content=content)
+
+
 @client.event
 async def on_ready():
-    # await tree.sync()
+    await tree.sync()
     print('ready')
 
 
